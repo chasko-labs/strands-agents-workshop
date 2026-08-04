@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from strands import Agent
+from strands.models import BedrockModel
 from strands.agent.conversation_manager import SlidingWindowConversationManager
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from customer_service_tools import lookup_customer, get_order_history, process_refund
@@ -25,7 +26,7 @@ _agent = None
 def get_agent():
     global _agent
     if _agent is None:
-        _agent = Agent(
+        _agent = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
             tools=[lookup_customer, get_order_history, process_refund],
             plugins=[RefundWorkflowHandler(), tone_handler],
             system_prompt=SYSTEM_PROMPT,

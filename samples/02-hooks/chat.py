@@ -15,6 +15,7 @@ Type 'quit', 'exit', or press Ctrl+C to stop.
 """
 
 from strands import Agent
+from strands.models import BedrockModel
 from strands.hooks import (
     HookProvider, HookRegistry,
     BeforeInvocationEvent, BeforeToolCallEvent,
@@ -60,7 +61,7 @@ information and process requests."""
 def main():
     # One agent instance reused across turns keeps conversation history in
     # agent.messages, which is what makes the conversation multi-turn.
-    agent = Agent(
+    agent = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
         tools=[lookup_customer, get_order_history, process_refund],
         hooks=[RateLimiterHook(max_calls=3)],
         system_prompt=SYSTEM_PROMPT,

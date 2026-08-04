@@ -21,6 +21,7 @@ Type 'quit', 'exit', or press Ctrl+C to stop.
 import argparse
 
 from strands import Agent, AgentSkills
+from strands.models import BedrockModel
 from strands.agent.conversation_manager import SlidingWindowConversationManager
 from strands.session.file_session_manager import FileSessionManager
 from customer_service_tools import lookup_customer, get_order_history, process_refund
@@ -49,7 +50,7 @@ def main():
         storage_dir="./sessions",
     )
 
-    agent = Agent(
+    agent = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
         tools=[lookup_customer, get_order_history, process_refund],
         plugins=[AgentSkills(skills=["./skills"])],
         system_prompt=SYSTEM_PROMPT,

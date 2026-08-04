@@ -15,6 +15,7 @@ Type 'quit', 'exit', or press Ctrl+C to stop.
 """
 
 from strands import Agent, AgentSkills
+from strands.models import BedrockModel
 from customer_service_tools import lookup_customer, get_order_history, process_refund
 from steering_handlers import RefundWorkflowHandler, tone_handler
 
@@ -33,7 +34,7 @@ def main():
     # One agent instance reused across turns keeps conversation history in
     # agent.messages, which is what makes the conversation multi-turn. The skills
     # and steering handlers apply on every turn.
-    agent = Agent(
+    agent = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
         tools=[lookup_customer, get_order_history, process_refund],
         plugins=[
             AgentSkills(skills=["./skills"]),

@@ -15,6 +15,7 @@ Type 'quit', 'exit', or press Ctrl+C to stop.
 """
 
 from strands import Agent, tool
+from strands.models import BedrockModel
 from customer_service_tools import lookup_customer, get_order_history, process_refund
 
 
@@ -65,7 +66,7 @@ def tech_support_specialist(issue_description: str) -> str:
     Args:
         issue_description: Detailed description of the technical issue including device name and symptoms
     """
-    specialist = Agent(
+    specialist = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
         tools=[check_device_compatibility, run_diagnostic],
         system_prompt="""You are a tech support specialist for an electronics store.
 You diagnose device issues, check compatibility, and provide step-by-step fixes.
@@ -97,7 +98,7 @@ in a friendly, non-technical way."""
 def main():
     # One orchestrator reused across turns keeps conversation history in
     # agent.messages, which is what makes the conversation multi-turn.
-    orchestrator = Agent(
+    orchestrator = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
         tools=[lookup_customer, get_order_history, process_refund, tech_support_specialist],
         system_prompt=SYSTEM_PROMPT,
     )
