@@ -1,44 +1,36 @@
-# Module 3: Skills + Steering
+# module 03 — skills + steering
 
-Give the agent workflow knowledge with **skills** (markdown procedures it loads on demand) and enforce business rules with **steering handlers** — a deterministic refund-workflow enforcer and an LLM-based tone guardrail.
+pluggable domain knowledge (AgentSkills) + deterministic and LLM guardrails.
 
-## What you'll build
+## what you learn
 
-- **Skills** — `SKILL.md` files the agent activates for step-by-step procedures.
-- **Deterministic steering** — `RefundWorkflowHandler` blocks `process_refund` until `lookup_customer` and `get_order_history` have run.
-- **LLM steering** — `ToneGuardrailHandler` evaluates each response for professionalism.
+- `AgentSkills(skills=["./skills"])` — loads SKILL.md recipe files
+- `SteeringHandler` — deterministic pre-tool-call enforcement
+- `LLMSteeringHandler` — secondary LLM evaluates output quality
+- `LedgerProvider` — tracks tool call history for workflow validation
+- `Proceed` / `Guide` return types control agent behavior
 
-## Architecture
+## skills
 
-**Skills** are markdown procedures the agent discovers and loads on demand, so it follows the right steps without bloating the system prompt:
+| skill           | purpose                                             |
+| --------------- | --------------------------------------------------- |
+| dynasty-debate  | step-by-step player/topic comparison workflow       |
+| game-breakdown  | structured game analysis recipe                     |
+| dynasty-context | background narrative (trade, CB crisis, win streak) |
 
-![Skills architecture](./images/skills-architecture.png)
+## steering handlers
 
-**Steering handlers** sit in the loop and enforce rules — the deterministic `RefundWorkflowHandler` blocks refunds until prerequisites run, while the LLM-based `ToneGuardrailHandler` checks each response:
+- `FactCheckHandler` — blocks get_season_stats until lookup_player confirms the player exists
+- `DussaultToneHandler` — LLM evaluates response against the Dussault standard
 
-![Steering flow](./images/steering-flow.png)
+## run
 
-## Files
+```bash
+cd samples/03-skills-steering
+python chat.py
+```
 
-| File | Purpose |
-|------|---------|
-| `module-03-skills-steering.ipynb` | Walkthrough: skills, then both steering handlers |
-| `steering_handlers.py` | `RefundWorkflowHandler` + `ToneGuardrailHandler` |
-| `skills/` | `refund-processing`, `order-tracking`, `account-troubleshooting` |
-| `customer_service_tools.py` | Mock tools (shared across modules) |
+## try
 
-## How do I run it?
-
-Open `module-03-skills-steering.ipynb` in **VS Code** or **JupyterLab** and run the cells top to bottom.
-
-## Skills vs. steering
-
-| | Skills | Steering handlers |
-|--|--------|-------------------|
-| Role | Suggest procedures | Enforce rules |
-| Format | Markdown (`SKILL.md`) | Python handler |
-| Binding | Optional, on demand | Always applied |
-
-## What's next
-
-**[Module 4: Session Managers](../04-session-managers/)** adds persistent memory so the agent remembers conversations across restarts.
+- "Compare Corey Dillon and Deion Branch — who was more important?"
+- "Break down the AFC Championship game for me."

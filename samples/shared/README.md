@@ -1,21 +1,38 @@
-# Shared Tools
+# shared — datasets + model provider
 
-Mock customer service tools used across the Workshop 1 modules. They simulate a backend so you can focus on agent patterns instead of real infrastructure.
+common code used across all workshop modules.
 
-## What's here
+## patriots_data.py
 
-| Tool | What it does |
-|------|--------------|
-| `lookup_customer(customer_id)` | Returns name, email, phone, and account status |
-| `get_order_history(customer_id)` | Returns orders with status, dates, and tracking |
-| `process_refund(order_id, amount)` | Returns a refund confirmation message |
+all 2004 new england patriots datasets. tools query this directly — no
+external APIs or databases needed.
 
-Data is hard-coded in `customer_service_tools.py` (customers `C-1001`, `C-1002`). Each module keeps its own copy of this file so it runs independently.
+| dataset          | records                                                           |
+| ---------------- | ----------------------------------------------------------------- |
+| ROSTER           | 97 players (name, position, university, pro_bowl, all_pro)        |
+| COACHES          | 12 staff (name, role)                                             |
+| GAMES            | 19 games (16 regular + 3 playoff, with scores and key performers) |
+| PLAYER_STATS     | 9 key contributors (full stat lines)                              |
+| PODCAST_EPISODES | 16 episodes (4 dynasty series + 12 pats from the past)            |
+| SEASON_RECORDS   | 25 fields (records, achievements, notable facts)                  |
 
-## Usage
+## model_provider.py
+
+helper to swap between inference backends:
+
+```bash
+# local (default) — no AWS creds needed
+export MODEL_PROVIDER=ollama
+
+# aws bedrock nova pro
+export MODEL_PROVIDER=nova
+```
+
+usage in any module:
 
 ```python
-from customer_service_tools import lookup_customer, get_order_history, process_refund
+import sys; sys.path.insert(0, "../shared")
+from model_provider import get_model
 
-agent = Agent(tools=[lookup_customer, get_order_history, process_refund])
+agent = Agent(model=get_model(), tools=[...], system_prompt=SYSTEM_PROMPT)
 ```

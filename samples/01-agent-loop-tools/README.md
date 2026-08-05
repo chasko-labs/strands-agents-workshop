@@ -1,47 +1,34 @@
-# Module 1: Agent Loop + Tools
+# module 01 — agent loop + tools
 
-Build a customer service agent with Strands Agents that looks up customers, checks orders, and processes refunds — then inspect the agent loop in action.
+the core strands agent loop: prompt → tool call → observe → respond.
 
-## What you'll build
+## what you learn
 
-A working agent and a look at how the **agent loop** runs: `User → LLM → Tool Call → Tool Result → LLM → Response`.
+- `@tool` decorator for defining typed tool functions
+- `Agent()` with model, tools, and system_prompt
+- multi-turn conversation (agent.messages persists context)
+- each tool extracts one data dimension (NGS feature extraction pattern)
 
-## Architecture
+## tools
 
-![Agent loop flow](./images/agent-loop-flow.png)
+| tool                               | returns                                     |
+| ---------------------------------- | ------------------------------------------- |
+| `lookup_player(player_name)`       | roster entry (position, university, honors) |
+| `get_roster_by_position(position)` | all players at that position                |
+| `get_game_result(week)`            | score, opponent, key performers             |
+| `get_season_stats(player_name)`    | full stat line for key contributors         |
+| `get_coaching_staff()`             | all 12 coaches + roles                      |
 
-The agent loop cycles between the LLM and your tools until the model has enough information to answer: the user prompt goes to the LLM, which decides to call a tool, reads the result, and either calls another tool or returns the final response.
+## run
 
-## Files
-
-| File | Purpose |
-|------|---------|
-| `module-01-agent-loop-tools.ipynb` | Walkthrough: define tools, run the agent, inspect the loop |
-| `customer_service_tools.py` | Mock tools: `lookup_customer`, `get_order_history`, `process_refund` |
-| `requirements.txt` | `strands-agents` |
-
-## How do I run it?
-
-Open `module-01-agent-loop-tools.ipynb` in **VS Code** or **JupyterLab** and run the cells top to bottom.
-
-You need Python 3.10+ and AWS credentials with Bedrock access (Strands uses Bedrock by default).
-
-## Key concept
-
-Tools are plain Python functions decorated with `@tool`. The LLM reads each docstring to decide when to call them — no manual routing required.
-
-```python
-from strands import Agent, tool
-
-@tool
-def lookup_customer(customer_id: str) -> str:
-    """Look up a customer by their ID."""
-    ...
-
-agent = Agent(tools=[lookup_customer], system_prompt=SYSTEM_PROMPT)
-agent("I'm C-1001. What are my recent orders?")
+```bash
+cd samples/01-agent-loop-tools
+pip install -r requirements.txt
+python chat.py
 ```
 
-## What's next
+## try
 
-The agent has no guardrails yet. **[Module 2: Hooks](../02-hooks/)** adds a rate limiter that caps tool calls with deterministic code.
+- "Who were the Pro Bowlers on the 2004 team?"
+- "What happened in the AFC Championship game?"
+- "Tell me about Corey Dillon's stats"
