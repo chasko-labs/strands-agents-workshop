@@ -334,3 +334,41 @@ SEASON_RECORDS = {
         "Romeo Crennel left after Super Bowl to become Cleveland Browns head coach",
     ],
 }
+
+
+# --- BELICHICK HOODIE DATABASE (2004 season) ---
+# Source: Mike Dussault's Hoodie Database (PatsPropaganda.com / Bleacher Report)
+# Google Sheets: https://docs.google.com/spreadsheet/ccc?key=0Aslynw1IOPmbdDMxMUlGbVV3ZTdnQUdtXzhxa0dZOEE
+# 2004 was the year Belichick "truly became the hoodie-loving coach"
+# Sleeves were still intact all season; he cut them off for the first time in 2005
+
+HOODIE_DATABASE = {
+    "season_summary": "2004 was the transitional hoodie year. Belichick wore the grey Reebok hoodie (sleeves intact) for at least 10 games including all 3 playoff victories. He was constantly pushing the sleeves up during Super Bowl XXXIX — a preview of the cut that came in 2005.",
+    "first_hoodie_appearance": "November 11, 2003 vs Cowboys (grey Reebok, sleeves intact)",
+    "sleeves_first_cut": "2005 Week 4 vs Chargers (mock-hoodie first, then full hoodie Week 9 2005)",
+    "super_bowl_xxxix_attire": "Grey Reebok hoodie, sleeves intact, constantly pushing them up",
+    "games": [
+        {"week": 1, "opponent": "Colts", "attire": "grey hoodie", "sleeves": "intact", "result": "W 27-24"},
+        {"week": 2, "opponent": "Cardinals", "attire": "grey hoodie", "sleeves": "intact", "result": "W 23-12"},
+        {"week": 4, "opponent": "Bills", "attire": "grey hoodie", "sleeves": "intact", "result": "W 31-17"},
+        {"week": 5, "opponent": "Dolphins", "attire": "grey hoodie", "sleeves": "intact", "result": "W 24-10"},
+        {"week": 6, "opponent": "Seahawks", "attire": "grey hoodie", "sleeves": "intact", "result": "W 30-20"},
+        {"week": 7, "opponent": "Jets", "attire": "grey hoodie", "sleeves": "intact", "result": "W 13-7"},
+        {"week": 8, "opponent": "Steelers", "attire": "grey hoodie", "sleeves": "intact", "result": "L 20-34"},
+        {"week": 9, "opponent": "Rams", "attire": "grey hoodie", "sleeves": "intact", "result": "W 40-22"},
+        {"week": 10, "opponent": "Bills", "attire": "grey hoodie", "sleeves": "intact", "result": "W 29-6"},
+        {"week": 11, "opponent": "Chiefs", "attire": "grey hoodie", "sleeves": "intact", "result": "W 27-19"},
+        {"week": "Divisional", "opponent": "Colts", "attire": "grey hoodie", "sleeves": "intact", "result": "W 20-3"},
+        {"week": "AFC Championship", "opponent": "Steelers", "attire": "grey hoodie", "sleeves": "intact", "result": "W 41-27"},
+        {"week": "Super Bowl XXXIX", "opponent": "Eagles", "attire": "grey hoodie", "sleeves": "intact (pushing up constantly)", "result": "W 24-21"},
+    ],
+    "grey_hoodie_record_2004": "12-1 (confirmed games in grey hoodie)",
+    "statistical_analysis": "Researcher Bob Yoon found Patriots play better than expected in grey: expected 58.39-19.61, actual 63-15. Biggest margin of victory in grey by 11 points.",
+    "trivia": [
+        "Belichick wore a windbreaker (not hoodie) for Super Bowls XXXVI and XXXVIII",
+        "The infamous red hoodie (Super Bowl XLII loss to Giants) didn't appear until 2008",
+        "2004 was the last season Belichick won a Super Bowl with sleeves intact",
+        "He told WEEI: 'I just put on whatever is there'",
+        "The hoodie database was ESPN-cited — Dussault tracked it across 180+ games via archival footage and crowdsourcing",
+    ],
+}

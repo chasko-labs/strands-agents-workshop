@@ -106,3 +106,47 @@ def get_coaching_staff() -> str:
     for coach in COACHES:
         lines.append(f"  {coach['name']} — {coach['role']}")
     return "\n".join(lines)
+
+
+@tool
+def get_hoodie_data(query: str) -> str:
+    """Look up Bill Belichick's hoodie/attire choices from the 2004 season.
+    Based on Mike Dussault's famous Hoodie Database.
+
+    Args:
+        query: What to look up — "week 8", "super bowl", "record", "trivia", or "summary"
+    """
+    from patriots_data import HOODIE_DATABASE
+
+    query_lower = query.lower()
+
+    # Summary
+    if "summary" in query_lower or "overview" in query_lower:
+        return HOODIE_DATABASE["season_summary"]
+
+    # Record/stats
+    if "record" in query_lower or "stats" in query_lower or "analysis" in query_lower:
+        return (
+            f"Grey hoodie record in 2004: {HOODIE_DATABASE['grey_hoodie_record_2004']}\n"
+            f"Statistical analysis: {HOODIE_DATABASE['statistical_analysis']}"
+        )
+
+    # Trivia
+    if "trivia" in query_lower or "fun fact" in query_lower:
+        return "Hoodie trivia:\n" + "\n".join(f"- {t}" for t in HOODIE_DATABASE["trivia"])
+
+    # Specific game lookup
+    for game in HOODIE_DATABASE["games"]:
+        week_str = str(game["week"]).lower()
+        opponent = game["opponent"].lower()
+        if week_str in query_lower or opponent in query_lower:
+            return (
+                f"Week {game['week']} vs {game['opponent']}: "
+                f"{game['attire']}, sleeves {game['sleeves']} — {game['result']}"
+            )
+
+    # Default: full season summary + all games
+    lines = [HOODIE_DATABASE["season_summary"], "", "Game-by-game:"]
+    for game in HOODIE_DATABASE["games"]:
+        lines.append(f"  Week {game['week']} vs {game['opponent']}: {game['attire']}, {game['sleeves']} — {game['result']}")
+    return "\n".join(lines)
