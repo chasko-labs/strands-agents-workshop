@@ -62,12 +62,54 @@ samples/
 
 ---
 
-## running
+## prerequisites
+
+### model access (pick one)
+
+| option           | what you need                                                                            | cost               |
+| ---------------- | ---------------------------------------------------------------------------------------- | ------------------ |
+| **aws bedrock**  | account with Nova Pro model access (us-west-2), `DenyThirdPartyBedrockInvoke` compatible | per-token          |
+| **ollama local** | ollama running, `ollama pull qwen3:8b`                                                   | free, no AWS creds |
+
+### python
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install strands-agents strands-agents-tools
+# module 07 additionally:
+pip install strands-agents-evals nest_asyncio
+```
 
+### development environment (pick what fits your workflow)
+
+| environment            | how it works                                               | persistence                                      |
+| ---------------------- | ---------------------------------------------------------- | ------------------------------------------------ |
+| **terminal + python**  | `python chat.py` in any terminal                           | per-session only                                 |
+| **kiro-cli**           | `kiro-cli chat` with .kiro/ config                         | session memory via kiro                          |
+| **kiro crew**          | persistent workspace with lessons, skills, cron, subagents | corrections survive restarts, skills self-evolve |
+| **vscode**             | standard python/jupyter workflow                           | manual                                           |
+| **deepagents / dcode** | langchain-compatible harness                               | future support planned                           |
+
+kiro crew is recommended for multi-session work (the agent remembers corrections,
+shares context across terminals in the same folder, and can run tasks overnight).
+but the workshop runs identically in a plain terminal — kiro is the tooling you use
+to work through it, not the workshop content itself.
+
+**quick start with kiro crew:**
+
+```bash
+# clone and build kiro crew (optional, enhances the experience)
+git clone https://github.com/kirodotdev/KiroCrew.git
+cd KiroCrew && make build && source .venv/bin/activate
+kirocrew setup && kirocrew doctor && kirocrew gateway
+# then work through modules in kiro-cli or the crew dashboard
+```
+
+---
+
+## running
+
+```bash
 export AWS_PROFILE=<your-bedrock-enabled-profile>
 export MODEL_PROVIDER=nova
 
