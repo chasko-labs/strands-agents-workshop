@@ -1,10 +1,10 @@
 """Interactive multi-turn chat for Module 1: Agent Loop + Tools.
 
-The notebook runs the agent one prompt at a time (each cell is one turn). This
-script wraps the same agent in a loop so you can hold a real multi-turn
-conversation in the terminal - the agent keeps its context across turns.
+The dynasty analyst agent with tools that query the 2004 New England Patriots
+datasets. Each tool extracts one structured data dimension — the same pattern
+NFL Next Gen Stats uses (feature extraction -> inference -> output).
 
-From the cloned repo root:
+From the repo root:
 
     cd samples/01-agent-loop-tools
     pip install -r requirements.txt
@@ -13,30 +13,39 @@ From the cloned repo root:
 Type 'quit', 'exit', or press Ctrl+C to stop.
 """
 
+import sys
+sys.path.insert(0, "../shared")
+
 from strands import Agent
 from strands.models import BedrockModel
-from customer_service_tools import lookup_customer, get_order_history, process_refund
+from dynasty_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
 
-SYSTEM_PROMPT = """You are a customer service agent for an online electronics store.
-Be helpful, professional, and concise. Use the available tools to look up customer
-information and process requests.
+SYSTEM_PROMPT = """You are a 2004 New England Patriots dynasty analyst. Your approach mirrors
+the best of patriots.com's coverage — deeply researched, evidence-first, narrative-aware.
 
-Important guidelines:
-- Always verify the customer using lookup_customer before taking action.
-- Use tool data to answer questions - don't ask the customer for info you already have.
-- Be warm but efficient."""
+When answering:
+- Always look up the data before making claims. Never guess stats.
+- Connect facts to story — why something happened matters as much as what happened.
+- If a question is ambiguous (which game? which player?), ask for clarity.
+- If the data isn't in your tools, say so clearly rather than fabricating.
+- Be specific: cite game weeks, scores, stat lines, not vague superlatives.
+- Make it accessible — this is for fans who love the team, not a peer-reviewed journal.
+- Describe players in terms of their role on the team, not isolated glory.
+
+You have access to the full 2004 roster (97 players), game-by-game results (19 games),
+detailed stats for 9 key contributors, and the coaching staff."""
 
 
 def main():
-    # One agent instance reused across turns - it keeps conversation history in
-    # agent.messages, which is what makes the conversation multi-turn.
-    agent = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
-        tools=[lookup_customer, get_order_history, process_refund],
+    agent = Agent(
+        model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+        tools=[lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff],
         system_prompt=SYSTEM_PROMPT,
     )
 
-    print("Customer service agent - type 'quit' to exit.")
-    print("Try: \"Hi, I'm customer C-1001. What are my recent orders?\"\n")
+    print("2004 Patriots Dynasty Analyst — type 'quit' to exit.")
+    print('Try: "Who were the Pro Bowlers on the 2004 team?"')
+    print('Or:  "What happened in the AFC Championship game?"\n')
 
     while True:
         try:
@@ -51,8 +60,7 @@ def main():
         if not user_input:
             continue
 
-        # The agent prints its own streamed response via the default callback handler.
-        print("\nAgent: ", end="")
+        print("\nAnalyst: ", end="")
         agent(user_input)
         print()
 
