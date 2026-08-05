@@ -1,34 +1,49 @@
+"""Module 5: Deploy — serverless dynasty analyst via Bedrock AgentCore.
+
+Packages the dynasty analyst as an event-driven serverless endpoint.
+Same pattern as NFL Next Gen Stats Lambda + API Gateway: fires on request,
+scales to zero between queries.
+
+Deploy with: agentcore deploy
+"""
+
+import sys
 import json
 import logging
-import os
+
+sys.path.insert(0, "../shared")
+sys.path.insert(0, "../01-agent-loop-tools")
+
 from strands import Agent
 from strands.models import BedrockModel
 from strands.agent.conversation_manager import SlidingWindowConversationManager
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
-from customer_service_tools import lookup_customer, get_order_history, process_refund
-from steering_handlers import RefundWorkflowHandler, tone_handler
+from dynasty_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
+from steering_handlers import FactCheckHandler, tone_handler
 
 logger = logging.getLogger(__name__)
 
 app = BedrockAgentCoreApp()
 
-SYSTEM_PROMPT = """You are a customer service agent for an online electronics store.
-Be helpful, professional, and concise. Use the available tools to look up customer
-information and process requests.
+SYSTEM_PROMPT = """You are a 2004 New England Patriots dynasty analyst API.
+You receive questions about the 2004 season and return evidence-based answers.
 
-Important guidelines:
-- Always ask for the customer ID first if you don't have it.
-- Use tool data to answer questions — don't ask for info you already have.
-- Be warm but efficient."""
+When answering:
+- Always look up the data before making claims.
+- Be specific: cite game weeks, scores, stat lines.
+- Connect facts to narrative.
+- If the data isn't in your tools, say so clearly."""
 
 _agent = None
+
 
 def get_agent():
     global _agent
     if _agent is None:
-        _agent = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
-            tools=[lookup_customer, get_order_history, process_refund],
-            plugins=[RefundWorkflowHandler(), tone_handler],
+        _agent = Agent(
+            model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+            tools=[lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff],
+            plugins=[FactCheckHandler(), tone_handler],
             system_prompt=SYSTEM_PROMPT,
             conversation_manager=SlidingWindowConversationManager(window_size=20),
         )

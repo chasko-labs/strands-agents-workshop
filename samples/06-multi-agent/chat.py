@@ -1,110 +1,139 @@
-"""Interactive multi-turn chat for Module 6: Multi-Agent (Optional).
+"""Module 6: Multi-Agent — orchestrator + podcast research specialist.
 
-The notebook runs the orchestrator one prompt at a time (each cell is one turn).
-This script wraps the same orchestrator - which delegates technical issues to a
-tech support specialist via the agents-as-tools pattern - in a loop so you can
-hold a real multi-turn conversation in the terminal.
+Demonstrates the agent-as-tool pattern: the main dynasty analyst handles
+roster/game queries directly, but delegates podcast research to a specialist
+agent with its own tools and system prompt.
 
-From the cloned repo root:
+Like NGS: lean orchestrator delegates to specialized inference teams.
 
+From the repo root:
     cd samples/06-multi-agent
-    pip install -r requirements.txt
     python chat.py
-
-Type 'quit', 'exit', or press Ctrl+C to stop.
 """
+
+import sys
+sys.path.insert(0, "../shared")
+sys.path.insert(0, "../01-agent-loop-tools")
 
 from strands import Agent, tool
 from strands.models import BedrockModel
-from customer_service_tools import lookup_customer, get_order_history, process_refund
+from patriots_data import PODCAST_EPISODES
+from dynasty_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
 
 
-# --- Tech support tools (specialist-only) ---
-
-@tool
-def check_device_compatibility(device: str, issue: str) -> str:
-    """Check if a device has known compatibility issues.
-
-    Args:
-        device: The device name or model
-        issue: Description of the issue
-    """
-    known_issues = {
-        "Wireless Headphones": "Known Bluetooth 5.0 pairing issue with older devices. Fix: Reset headphones (hold power 10s), then re-pair.",
-        "USB-C Hub": "Some laptops require USB-C alt mode. Check laptop specs for DisplayPort over USB-C support.",
-        "Mechanical Keyboard": "Firmware v2.1 has a key ghosting bug. Update to v2.3 via manufacturer website.",
-    }
-    for device_name, fix in known_issues.items():
-        if device_name.lower() in device.lower():
-            return f"Known issue found for {device_name}: {fix}"
-    return f"No known issues found for '{device}'. Recommend standard troubleshooting: restart device, check connections, update drivers."
-
+# --- Podcast specialist tools ---
 
 @tool
-def run_diagnostic(device: str) -> str:
-    """Run a remote diagnostic check on a device.
+def search_podcast_episodes(query: str) -> str:
+    """Search podcast episodes about the 2004 Patriots dynasty by keyword.
 
     Args:
-        device: The device name or model to diagnose
+        query: Search term (player name, topic, keyword)
     """
-    return (
-        f"Diagnostic results for {device}:\n"
-        f"- Firmware: v2.1 (update available: v2.3)\n"
-        f"- Connection: Stable\n"
-        f"- Battery: 85%\n"
-        f"- Last sync: 2 hours ago\n"
-        f"Recommendation: Update firmware to resolve known issues."
+    query_lower = query.lower()
+    matches = []
+    for ep in PODCAST_EPISODES:
+        searchable = f"{ep['title']} {ep['description']} {' '.join(ep.get('keywords', []))} {' '.join(ep.get('interviewees', []))}".lower()
+        if query_lower in searchable:
+            matches.append(ep)
+
+    if not matches:
+        return f"No podcast episodes found matching '{query}'. Try a player name or topic like 'trade', 'defense', 'Super Bowl'."
+
+    results = []
+    for ep in matches:
+        interviewees = ", ".join(ep.get("interviewees", ["unknown"]))
+        results.append(
+            f"{ep['series']} Ep {ep['episode']}: \"{ep['title']}\" ({ep['duration_min']} min, {ep['date']})\n"
+            f"  Guests: {interviewees}\n"
+            f"  {ep['description'][:120]}..."
+        )
+    return f"{len(matches)} episode(s) found:\n\n" + "\n\n".join(results)
+
+
+@tool
+def get_episode_details(series: str, episode: str) -> str:
+    """Get full details for a specific podcast episode.
+
+    Args:
+        series: Series name ("2004 Dynasty" or "Pats from the Past")
+        episode: Episode number or identifier ("I", "II", "7", "48", etc.)
+    """
+    match = next(
+        (ep for ep in PODCAST_EPISODES
+         if ep["series"].lower() == series.lower() and str(ep["episode"]) == str(episode)),
+        None
     )
+    if not match:
+        return f"Episode not found: {series} #{episode}. Available series: '2004 Dynasty' (I-IV), 'Pats from the Past' (7-54)."
 
+    lines = [
+        f"{match['series']} — Episode {match['episode']}: \"{match['title']}\"",
+        f"Duration: {match['duration_min']} minutes",
+        f"Published: {match['date']}",
+        f"Interviewees: {', '.join(match.get('interviewees', ['not listed']))}",
+        f"Description: {match['description']}",
+        f"Keywords: {', '.join(match.get('keywords', []))}",
+    ]
+    return "\n".join(lines)
+
+
+# --- Specialist agent wrapped as a tool ---
 
 @tool
-def tech_support_specialist(issue_description: str) -> str:
-    """Escalate a technical issue to the tech support specialist agent.
-    Use this when a customer has a device problem, connectivity issue,
-    or needs technical troubleshooting beyond basic order/account help.
+def podcast_research_specialist(query: str) -> str:
+    """Delegate podcast research to the specialist agent.
+    Use this when the user asks about interviews, podcast episodes, or
+    what players/coaches said about the 2004 season.
 
     Args:
-        issue_description: Detailed description of the technical issue including device name and symptoms
+        query: The research question about podcast content
     """
-    specialist = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
-        tools=[check_device_compatibility, run_diagnostic],
-        system_prompt="""You are a tech support specialist for an electronics store.
-You diagnose device issues, check compatibility, and provide step-by-step fixes.
-Be technical but clear. Always provide actionable next steps.""",
-        callback_handler=None,  # Silent - don't stream the specialist's output to the user
+    specialist = Agent(
+        model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+        tools=[search_podcast_episodes, get_episode_details],
+        system_prompt="""You are a podcast research specialist for the 2004 Patriots dynasty.
+You search episode archives to find relevant interviews and content.
+Always cite the specific episode, guest, and air date.
+If multiple episodes are relevant, rank them by relevance to the query.""",
+        callback_handler=None,  # Silent — don't stream specialist output
     )
-    print(f"\n[DELEGATION] 🔧 Tech support specialist activated")
-    response = specialist(issue_description)
-    print(f"[DELEGATION] ✅ Specialist responded")
+    print(f"\n[DELEGATION] \U0001f3a7 Podcast specialist activated for: {query[:60]}")
+    response = specialist(query)
+    print(f"[DELEGATION] \u2705 Specialist responded")
     return str(response)
 
 
-SYSTEM_PROMPT = """You are a customer service agent for an online electronics store.
-Be helpful, professional, and concise.
+# --- Orchestrator ---
+
+SYSTEM_PROMPT = """You are a 2004 New England Patriots dynasty analyst with access to
+both data tools AND a podcast research specialist.
 
 You handle:
-- Account lookups and order status
-- Refund processing
-- Basic questions
+- Roster lookups, game results, player stats, coaching staff (directly)
+- Questions about what players or coaches said, podcast interviews,
+  behind-the-scenes stories (delegate to podcast_research_specialist)
 
-For TECHNICAL issues (device problems, connectivity, firmware, troubleshooting),
-delegate to the tech_support_specialist tool. Provide it with the device name
-and a clear description of the issue.
+When a user asks about interviews, quotes, what someone said about the
+season, or podcast content, delegate to the podcast_research_specialist
+tool with a clear description of what to find.
 
-After getting the specialist's response, relay the solution to the customer
-in a friendly, non-technical way."""
+After getting the specialist's response, synthesize it with your own
+knowledge to give a complete answer."""
 
 
 def main():
-    # One orchestrator reused across turns keeps conversation history in
-    # agent.messages, which is what makes the conversation multi-turn.
-    orchestrator = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
-        tools=[lookup_customer, get_order_history, process_refund, tech_support_specialist],
+    orchestrator = Agent(
+        model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+        tools=[lookup_player, get_roster_by_position, get_game_result, get_season_stats,
+               get_coaching_staff, podcast_research_specialist],
         system_prompt=SYSTEM_PROMPT,
     )
 
-    print("Customer service orchestrator (delegates to a specialist) - type 'quit' to exit.")
-    print("Try: \"I'm C-1001. My wireless headphones won't pair with my phone.\"\n")
+    print("2004 Patriots Dynasty Analyst (multi-agent) — type 'quit' to exit.")
+    print("This agent delegates podcast research to a specialist.")
+    print('Try: "What did the podcasts say about how the Dillon trade came together?"')
+    print('Or:  "Is there an episode where Rodney Harrison talks about 2004 vs 2007?"\n')
 
     while True:
         try:
@@ -119,7 +148,7 @@ def main():
         if not user_input:
             continue
 
-        print("\nAgent: ", end="")
+        print("\nAnalyst: ", end="")
         orchestrator(user_input)
         print()
 
