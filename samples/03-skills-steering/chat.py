@@ -1,51 +1,52 @@
-"""Interactive multi-turn chat for Module 3: Skills + Steering.
+"""Module 3: Skills + Steering — dynasty analyst with workflow skills and guardrails.
 
-The notebook runs the agent one prompt at a time (each cell is one turn). This
-script wraps the same agent - with the workflow skills and both steering
-handlers from the module - in a loop so you can hold a real multi-turn
-conversation in the terminal.
+Demonstrates:
+- AgentSkills plugin loading SKILL.md recipe files
+- SteeringHandler (deterministic fact-check workflow)
+- LLMSteeringHandler (Dussault tone evaluation)
 
-From the cloned repo root:
-
+From the repo root:
     cd samples/03-skills-steering
-    pip install -r requirements.txt
     python chat.py
-
-Type 'quit', 'exit', or press Ctrl+C to stop.
 """
+
+import sys
+sys.path.insert(0, "../shared")
+sys.path.insert(0, "../01-agent-loop-tools")
 
 from strands import Agent, AgentSkills
 from strands.models import BedrockModel
-from customer_service_tools import lookup_customer, get_order_history, process_refund
-from steering_handlers import RefundWorkflowHandler, tone_handler
+from dynasty_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
+from steering_handlers import FactCheckHandler, tone_handler
 
-SYSTEM_PROMPT = """You are a customer service agent for an online electronics store.
-Be helpful, professional, and concise. Use the available tools to look up customer
-information and process requests. When a customer needs help, activate the appropriate
-skill for step-by-step guidance.
+SYSTEM_PROMPT = """You are a 2004 New England Patriots dynasty analyst. Your approach mirrors
+the best of patriots.com's coverage — evidence-first, narrative-aware.
 
-Important guidelines:
-- Always ask for the customer ID first if you don't have it.
-- Use the data returned by tools to answer questions.
-- Be warm but efficient."""
+When answering:
+- Always look up the data before making claims. Never guess stats.
+- Connect facts to story — why something happened matters as much as what happened.
+- If a question is ambiguous, ask for clarity.
+- If the data isn't in your tools, say so clearly rather than fabricating.
+- Be specific: cite game weeks, scores, stat lines.
+- When comparing players or topics, activate the dynasty-debate skill.
+- When analyzing a game, activate the game-breakdown skill."""
 
 
 def main():
-    # One agent instance reused across turns keeps conversation history in
-    # agent.messages, which is what makes the conversation multi-turn. The skills
-    # and steering handlers apply on every turn.
-    agent = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
-        tools=[lookup_customer, get_order_history, process_refund],
+    agent = Agent(
+        model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+        tools=[lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff],
         plugins=[
             AgentSkills(skills=["./skills"]),
-            RefundWorkflowHandler(),
+            FactCheckHandler(),
             tone_handler,
         ],
         system_prompt=SYSTEM_PROMPT,
     )
 
-    print("Customer service agent (skills + steering) - type 'quit' to exit.")
-    print("Try: \"I'm customer C-1001. I want a refund for order ORD-5521.\"\n")
+    print("2004 Patriots Dynasty Analyst (skills + steering) — type 'quit' to exit.")
+    print('Try: "Compare Corey Dillon and Deion Branch — who was more important?"')
+    print('Or:  "Break down the AFC Championship game for me."\n')
 
     while True:
         try:
@@ -60,7 +61,7 @@ def main():
         if not user_input:
             continue
 
-        print("\nAgent: ", end="")
+        print("\nAnalyst: ", end="")
         agent(user_input)
         print()
 

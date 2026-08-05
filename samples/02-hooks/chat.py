@@ -1,74 +1,105 @@
-"""Interactive multi-turn chat for Module 2: Hooks.
+"""Module 2: Hooks — dynasty analyst with analytics tracking.
 
-The notebook runs the agent one prompt at a time (each cell is one turn). This
-script wraps the same agent - with the RateLimiterHook from the notebook - in a
-loop so you can hold a real multi-turn conversation in the terminal. The rate
-limiter resets at the start of each turn (each agent invocation).
+Demonstrates HookProvider lifecycle hooks:
+- BeforeInvocationEvent: reset tracking at start of each turn
+- BeforeToolCallEvent: track queries, detect repeats, enforce cite-your-source
 
-From the cloned repo root:
-
+From the repo root:
     cd samples/02-hooks
-    pip install -r requirements.txt
     python chat.py
-
-Type 'quit', 'exit', or press Ctrl+C to stop.
 """
+
+import sys
+sys.path.insert(0, "../shared")
 
 from strands import Agent
 from strands.models import BedrockModel
-from strands.hooks import (
-    HookProvider, HookRegistry,
-    BeforeInvocationEvent, BeforeToolCallEvent,
-)
-from customer_service_tools import lookup_customer, get_order_history, process_refund
+from strands.hooks import HookProvider, HookRegistry, BeforeInvocationEvent, BeforeToolCallEvent
+
+# Import tools from module 01
+sys.path.insert(0, "../01-agent-loop-tools")
+from dynasty_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
 
 
-class RateLimiterHook(HookProvider):
-    """Caps each tool at max_calls per agent invocation."""
+class DynastyAnalyticsHook(HookProvider):
+    """Tracks analysis patterns and blocks repeat lookups.
+    
+    Like NGS CloudWatch monitoring every inference — this hook observes
+    every tool call, tracks what's been queried, and prevents redundant lookups.
+    """
 
-    def __init__(self, max_calls: int = 3):
-        self.max_calls = max_calls
-        self.counts: dict[str, int] = {}
+    def __init__(self):
+        self.queried_players: set = set()
+        self.queried_games: set = set()
+        self.tool_count: int = 0
 
     def register_hooks(self, registry: HookRegistry) -> None:
-        registry.add_callback(BeforeInvocationEvent, self.reset)
-        registry.add_callback(BeforeToolCallEvent, self.check)
+        registry.add_callback(BeforeInvocationEvent, self.reset_turn)
+        registry.add_callback(BeforeToolCallEvent, self.track_and_gate)
 
-    def reset(self, event: BeforeInvocationEvent) -> None:
-        """Reset counts at the start of each invocation."""
-        self.counts = {}
-        print("[HOOK] 🔄 Rate limiter reset")
+    def reset_turn(self, event: BeforeInvocationEvent) -> None:
+        """Reset per-turn counters. Keeps cross-turn memory of queried players."""
+        self.tool_count = 0
+        print(f"[ANALYTICS] \U0001f4ca Session state: {len(self.queried_players)} players queried, {len(self.queried_games)} games reviewed")
 
-    def check(self, event: BeforeToolCallEvent) -> None:
-        """Check and enforce the rate limit before each tool call."""
+    def track_and_gate(self, event: BeforeToolCallEvent) -> None:
+        """Track queries and block repeat lookups."""
         name = event.tool_use["name"]
-        self.counts[name] = self.counts.get(name, 0) + 1
-        print(f"[HOOK] 📊 {name}: call {self.counts[name]}/{self.max_calls}")
+        args = event.tool_use.get("input", {})
+        self.tool_count += 1
 
-        if self.counts[name] > self.max_calls:
-            event.cancel_tool = (
-                f"'{name}' hit the {self.max_calls}-call limit. "
-                "Do NOT call this tool again."
-            )
-            print(f"[HOOK] 🚫 BLOCKED: {name} exceeded limit!")
+        print(f"[ANALYTICS] \U0001f50d Tool call #{self.tool_count}: {name}({args})")
+
+        # Track and gate player lookups
+        if name == "lookup_player":
+            player = args.get("player_name", "").lower()
+            if player in self.queried_players:
+                event.cancel_tool = (
+                    f"Already looked up '{player}' this session. "
+                    "Use the information from the previous lookup instead of repeating it."
+                )
+                print(f"[ANALYTICS] \U0001f6ab BLOCKED: repeat lookup for '{player}'")
+                return
+            self.queried_players.add(player)
+
+        # Track game queries
+        if name == "get_game_result":
+            week = args.get("week", "")
+            if week in self.queried_games:
+                event.cancel_tool = (
+                    f"Already reviewed week {week} this session. "
+                    "Reference the earlier result instead of re-querying."
+                )
+                print(f"[ANALYTICS] \U0001f6ab BLOCKED: repeat game lookup for week {week}")
+                return
+            self.queried_games.add(week)
+
+        # Depth warning
+        if self.tool_count > 5:
+            print(f"[ANALYTICS] \u26a0\ufe0f  High analysis depth: {self.tool_count} tools this turn")
 
 
-SYSTEM_PROMPT = """You are a customer service agent for an online electronics store.
-Be helpful, professional, and concise. Use the available tools to look up customer
-information and process requests."""
+SYSTEM_PROMPT = """You are a 2004 New England Patriots dynasty analyst. Your approach mirrors
+the best of patriots.com's coverage — evidence-first, narrative-aware.
+
+When answering:
+- Always look up the data before making claims. Never guess stats.
+- Connect facts to story — why something happened matters as much as what happened.
+- Be specific: cite game weeks, scores, stat lines.
+- Describe players in terms of their role on the team."""
 
 
 def main():
-    # One agent instance reused across turns keeps conversation history in
-    # agent.messages, which is what makes the conversation multi-turn.
-    agent = Agent(model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"), 
-        tools=[lookup_customer, get_order_history, process_refund],
-        hooks=[RateLimiterHook(max_calls=3)],
+    agent = Agent(
+        model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+        tools=[lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff],
+        hooks=[DynastyAnalyticsHook()],
         system_prompt=SYSTEM_PROMPT,
     )
 
-    print("Customer service agent (rate-limited) - type 'quit' to exit.")
-    print("Try: \"Hi, I'm customer C-1001. What are my recent orders?\"\n")
+    print("2004 Patriots Dynasty Analyst (with analytics hooks) — type 'quit' to exit.")
+    print("Try asking about the same player twice to see the repeat-query blocker.")
+    print('Or:  "Compare Brady and Dillon\'s seasons" to see analysis depth tracking.\n')
 
     while True:
         try:
@@ -83,7 +114,7 @@ def main():
         if not user_input:
             continue
 
-        print("\nAgent: ", end="")
+        print("\nAnalyst: ", end="")
         agent(user_input)
         print()
 
