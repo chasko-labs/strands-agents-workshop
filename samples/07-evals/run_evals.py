@@ -23,7 +23,13 @@ from model_provider import get_model
 from strands_evals import Case, Experiment
 from strands_evals.evaluators import OutputEvaluator, TrajectoryEvaluator
 from strands_evals.extractors import tools_use_extractor
-from dussault_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
+try:
+    from dussault_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
+except ImportError:
+    print("ERROR: Module 01 tools not found.")
+    print("       Ensure samples/01-agent-loop-tools/dussault_tools.py exists.")
+    print("       Run from this directory: cd samples/NN-[name]")
+    sys.exit(1)
 
 
 # --- Dussault Output Rubric ---

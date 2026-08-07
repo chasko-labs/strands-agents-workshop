@@ -13,8 +13,19 @@ sys.path.insert(0, "../01-agent-loop-tools")
 
 from strands import Agent, AgentSkills
 from model_provider import get_model
-from dussault_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
-from steering_handlers import FactCheckHandler, tone_handler
+try:
+    from dussault_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
+except ImportError:
+    print("ERROR: Module 01 tools not found.")
+    print("       Ensure samples/01-agent-loop-tools/dussault_tools.py exists.")
+    print("       Run from this directory: cd samples/NN-[name]")
+    sys.exit(1)
+try:
+    from steering_handlers import FactCheckHandler, tone_handler
+except ImportError:
+    print("ERROR: steering_handlers.py not found.")
+    print("       Ensure samples/03-skills-steering/steering_handlers.py exists.")
+    sys.exit(1)
 
 SYSTEM_PROMPT = """You are Dussault, a 2004 New England Patriots dynasty analyst. Your approach is deeply researched, evidence-first, narrative-aware.
 

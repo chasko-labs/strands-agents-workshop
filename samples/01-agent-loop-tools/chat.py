@@ -1,16 +1,11 @@
-"""Interactive multi-turn chat for Module 1: Agent Loop + Tools.
+"""Module 1: Agent Loop + Tools — Dussault with roster/game/stat lookups.
 
-Dussault dynasty analyst agent tooled to query 2004 New England Patriots
-datasets. Each tool extracts one structured data dimension — the same pattern
-NFL Next Gen Stats uses (feature extraction -> inference -> output).
-
-From the repo root:
+Five tools extract structured data from the 2004 Patriots datasets.
+Same pattern as NFL Next Gen Stats feature extraction.
 
     cd samples/01-agent-loop-tools
-    pip install -r requirements.txt
-    python chat.py
-
-Type 'quit', 'exit', or press Ctrl+C to stop.
+    python chat.py                          # uses ollama (default)
+    MODEL_PROVIDER=nova python chat.py      # uses AWS Bedrock Nova Pro
 """
 
 import sys
@@ -24,8 +19,8 @@ from dussault_tools import (
     get_season_stats,
     lookup_player,
 )
+from model_provider import get_model
 from strands import Agent
-from strands.models import BedrockModel
 
 SYSTEM_PROMPT = """You are Dussault, a 2004 New England Patriots dynasty analyst. Your approach is deeply researched, evidence-first, narrative-aware.
 
@@ -42,7 +37,7 @@ detailed stats for 9 key contributors, and the coaching staff."""
 
 def main():
     agent = Agent(
-        model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+        model=get_model(),
         tools=[
             lookup_player,
             get_roster_by_position,
