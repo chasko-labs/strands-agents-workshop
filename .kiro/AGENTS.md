@@ -1,75 +1,73 @@
 # Rules for AI Assistants
 
-**This file is a ROUTER.** It carries the project identity and points to docs
-you MUST read before touching a subsystem.
+**This file is a ROUTER.** Project identity + pointers to docs you must read.
 
 ## What this is
 
 A strands-agents workshop teaching AI agent patterns through the 2004 New England
-Patriots dynasty season. Seven modules build a "dynasty analyst" agent piece by
-piece. The gold standard for agent output quality is Mike Dussault's work at
-patriots.com.
+Patriots dynasty. Seven modules build "Dussault" — named after the patriots.com writer
+whose work sets the quality bar.
 
 - **Runtime:** strands-agents SDK (Python, PyPI)
-- **Model:** Amazon Nova Pro (us.amazon.nova-pro-v1:0) or Ollama (qwen3:8b local)
+- **Model:** Amazon Nova Pro or Ollama (qwen3:8b local)
 - **Deploy:** Bedrock AgentCore (module 05)
-- **Crew:** Kiro Crew orchestrates the build workflow (research → author → validate → commit)
-- **Data home:** `samples/shared/patriots_data.py` (all datasets, no external deps)
+- **Crew:** Kiro crew orchestrates the build (Belichick + coaching staff)
+- **Data home:** `samples/shared/patriots_data.py`
 
 ## Read before you touch
 
-| If you are touching…                      | Read first                                                                  |
-| ----------------------------------------- | --------------------------------------------------------------------------- |
-| datasets (roster, games, stats, podcasts) | `samples/shared/patriots_data.py` + `samples/shared/README.md`              |
-| any module's tools                        | `samples/01-agent-loop-tools/dynasty_tools.py` (canonical tool definitions) |
-| hooks (lifecycle, analytics)              | `samples/02-hooks/chat.py`                                                  |
-| skills or steering handlers               | `samples/03-skills-steering/skills/` + `steering_handlers.py`               |
-| session persistence                       | `samples/04-session-managers/chat.py`                                       |
-| serverless deploy                         | `samples/05-deploy/main.py`                                                 |
-| multi-agent delegation                    | `samples/06-multi-agent/chat.py`                                            |
-| eval rubrics or test cases                | `samples/07-evals/run_evals.py`                                             |
-| project scope, conventions, quality bar   | `.kiro/steering/project-context.md` + `.kiro/steering/project-scope.md`     |
-| implementation plan, dataset schemas      | `docs/implementation-plan.md`                                               |
-| NGS architectural parallel                | `README.md`                                                                 |
+| If touching…        | Read first                                                              |
+| ------------------- | ----------------------------------------------------------------------- |
+| datasets            | `samples/shared/patriots_data.py` + `samples/shared/README.md`          |
+| tools               | `samples/01-agent-loop-tools/dussault_tools.py`                         |
+| hooks               | `samples/02-hooks/chat.py`                                              |
+| skills / steering   | `samples/03-skills-steering/skills/` + `steering_handlers.py`           |
+| session persistence | `samples/04-session-managers/chat.py`                                   |
+| serverless deploy   | `samples/05-deploy/main.py`                                             |
+| multi-agent         | `samples/06-multi-agent/chat.py`                                        |
+| evals               | `samples/07-evals/run_evals.py`                                         |
+| project context     | `.kiro/steering/project-context.md` + `.kiro/steering/project-scope.md` |
 
 ## Crew roster (who builds this workshop)
 
-| agent                          | role                                             | when active           |
-| ------------------------------ | ------------------------------------------------ | --------------------- |
-| poltergeist-harald-core-anchor | orchestration, planning, dataset curation        | session coordination  |
-| ghost-kerouac-research-analyst | 2004 patriots data research, podcast RSS parsing | data gathering        |
-| ghost-hcom-api-delegate        | strands-agents SDK doc lookup via context7       | before authoring code |
-| ghost-hcom-python-coder        | module authoring (tools, hooks, skills, evals)   | implementation        |
-| ghost-orin-ci-cd               | git ops, commits, branch management              | every commit          |
-| ghost-scribe-style-enforcer    | dussault standard enforcement on output          | quality gate          |
+| agent                             | persona                    | role                                 | when active          |
+| --------------------------------- | -------------------------- | ------------------------------------ | -------------------- |
+| poltergeist-belichick-core-anchor | Belichick (HC)             | orchestrates, delegates, never codes | session coordination |
+| ghost-weis-offense-author         | Charlie Weis (OC)          | writes module code                   | implementation       |
+| ghost-crennel-defense-validator   | Romeo Crennel (DC)         | quality gate, style check            | before commit        |
+| ghost-pioli-personnel-research    | Scott Pioli (VP Personnel) | data research, SDK docs              | before authoring     |
+| ghost-mangini-ops-ci              | Eric Mangini (DB Coach)    | git ops, commits                     | every commit         |
+| ghost-mcdaniels-qb-tools          | Josh McDaniels (QB Coach)  | tool authoring                       | tool changes         |
+
+## Kiro concepts demonstrated by this crew
+
+| concept             | where to look                        | what it teaches                                   |
+| ------------------- | ------------------------------------ | ------------------------------------------------- |
+| custom agents       | `.kiro/agents/*.json`                | agent config schema (name, model, tools, hooks)   |
+| persona trifecta    | `.kiro/agents/belichick/`            | SOUL.md + SKILL.md + DUTIES.md pattern            |
+| enforcement hooks   | `.kiro/hooks/belichick-code-gate.sh` | preToolUse hooks that block actions               |
+| MCP servers         | `.kiro/settings/mcp.json`            | wiring external tools (context7, valkey)          |
+| steering docs       | `.kiro/steering/`                    | project context + scope as loaded resources       |
+| subagent delegation | belichick's use_subagent tool        | flat delegation model (orchestrator → specialist) |
+| includeMcpJson      | agent JSON `includeMcpJson: true`    | global vs agent-specific server config            |
 
 ## Quality standard
 
-Agent output aspires to the Dussault standard (docs/implementation-plan.md):
+Agent output aspires to the Dussault standard:
 
 - lead with findings, not process
 - cite specific data (game weeks, scores, stat lines)
-- connect facts to narrative (why, not just what)
+- connect facts to narrative
 - name what's unknown rather than hedge
 - players described in terms of team function
 
-## Long-term intent
-
-This workshop is built via kiro-cli crew sessions today. The long-term direction
-is multi-surface interaction: kiro-cli, Kiro Crew (desktop/web/TUI), langchain,
-deepagents/dcode. The `.kiro/` config provides the chassis that carries across
-all surfaces — steering files, skills, and agents persist regardless of which
-tool drives the session.
-
 ## Model
 
-All work uses Amazon Nova Pro (`us.amazon.nova-pro-v1:0`), consistent with
-accounts enforcing `DenyThirdPartyBedrockInvoke`. Local dev: ollama with qwen3:8b.
+`MODEL_PROVIDER=nova` (Amazon Nova Pro) or `MODEL_PROVIDER=ollama` (local qwen3:8b).
 See `samples/shared/model_provider.py` for the swap helper.
 
 ## Git
 
 - `main` is the default branch
-- changes land through commits (ghost-orin-ci-cd)
 - commit format: `<type>: <summary>` (feat, fix, docs, chore)
 - one logical change per commit

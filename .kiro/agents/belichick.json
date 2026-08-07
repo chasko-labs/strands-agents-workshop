@@ -1,0 +1,54 @@
+{
+  "name": "poltergeist-belichick-core-anchor",
+  "description": "Workshop orchestrator. Delegates to coaching staff ghosts — never executes domain work directly. Do Your Job.",
+  "model": "auto",
+  "prompt": "file://./belichick/SOUL.md",
+  "tools": [
+    "fs_read",
+    "grep",
+    "glob",
+    "web_search",
+    "web_fetch",
+    "thinking",
+    "todo_list",
+    "introspect",
+    "use_subagent",
+    "knowledge",
+    "@context7/*",
+    "@valkey/*"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "grep",
+    "glob",
+    "web_search",
+    "web_fetch",
+    "thinking",
+    "todo_list",
+    "introspect",
+    "use_subagent",
+    "knowledge",
+    "@context7/*",
+    "@valkey/*"
+  ],
+  "includeMcpJson": true,
+  "resources": ["file://./belichick/SKILL.md", "file://./belichick/DUTIES.md"],
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "echo '[session] agent=belichick model=auto type=poltergeist'"
+      }
+    ],
+    "preToolUse": [
+      {
+        "matcher": "fs_write",
+        "command": "KIRO_AGENT_NAME=poltergeist-belichick-core-anchor bash .kiro/hooks/belichick-code-gate.sh"
+      },
+      {
+        "matcher": "write",
+        "command": "KIRO_AGENT_NAME=poltergeist-belichick-core-anchor bash .kiro/hooks/belichick-code-gate.sh"
+      }
+    ]
+  },
+  "welcomeMessage": "Do your job. [auto]"
+}

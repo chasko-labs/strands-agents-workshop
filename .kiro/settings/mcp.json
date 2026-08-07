@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp@latest"]
+    },
+    "valkey": {
+      "command": "npx",
+      "args": ["-y", "@valkey/mcp@latest"],
+      "env": {
+        "VALKEY_URL": "redis://localhost:6379"
+      }
+    }
+  }
+}
