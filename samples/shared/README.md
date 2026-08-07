@@ -36,3 +36,26 @@ from model_provider import get_model
 
 agent = Agent(model=get_model(), tools=[...], system_prompt=SYSTEM_PROMPT)
 ```
+
+## valkey_client.py
+
+optional persistence layer for cross-module memory, research caching, analytics,
+and leaderboard tracking. graceful fallback — returns None when unavailable, so
+every module works without it.
+
+```bash
+# start valkey (optional)
+docker run -d --name workshop-valkey -p 6379:6379 valkey/valkey:8
+export VALKEY_URL=redis://localhost:6379
+```
+
+usage in any module:
+
+```python
+import sys; sys.path.insert(0, "../shared")
+from valkey_client import get_valkey, workshop_user_id
+
+vk = get_valkey()  # None if no VALKEY_URL or server unreachable
+if vk:
+    vk.set(f"user:{workshop_user_id()}:last_query", query)
+```
