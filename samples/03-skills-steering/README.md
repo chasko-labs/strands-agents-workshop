@@ -1,36 +1,48 @@
 # module 03 — skills + steering
 
-pluggable domain knowledge (AgentSkills) + deterministic and LLM guardrails.
+skills give the agent procedural recipes to follow; steering handlers enforce quality
+gates on its output. this module adds a dynasty-debate skill (step-by-step comparison
+workflow) and two guardrails: a fact-check handler that blocks claims without a prior
+lookup, and a tone handler that scores responses against the Dussault standard.
 
-## what you learn
+## prerequisites
 
-- `AgentSkills(skills=["./skills"])` — loads SKILL.md recipe files
-- `SteeringHandler` — deterministic pre-tool-call enforcement
-- `LLMSteeringHandler` — secondary LLM evaluates output quality
-- `LedgerProvider` — tracks tool call history for workflow validation
-- `Proceed` / `Guide` return types control agent behavior
-
-## skills
-
-| skill           | purpose                                             |
-| --------------- | --------------------------------------------------- |
-| dynasty-debate  | step-by-step player/topic comparison workflow       |
-| game-breakdown  | structured game analysis recipe                     |
-| dynasty-context | background narrative (trade, CB crisis, win streak) |
-
-## steering handlers
-
-- `FactCheckHandler` — blocks get_season_stats until lookup_player confirms the player exists
-- `DussaultToneHandler` — LLM evaluates response against the Dussault standard
+- python venv activated (`source ../../.venv/bin/activate`)
+- `pip install -r ../../requirements.txt`
+- module 01 completed (you understand tools and the agent loop)
+- ollama running with qwen3:8b pulled
 
 ## run
 
 ```bash
 cd samples/03-skills-steering
-python chat.py
+python chat.py                          # ollama (default)
+MODEL_PROVIDER=nova python chat.py      # AWS Bedrock
 ```
 
-## try
+## what you'll see
 
-- "Compare Corey Dillon and Deion Branch — who was more important?"
-- "Break down the AFC Championship game for me."
+```
+You: Compare Corey Dillon and Deion Branch
+[FACT-CHECK] blocking get_season_stats — must lookup_player first
+Dussault: Let me verify both players are on the roster first...
+[TONE] score=8/10 — specific stats cited, narrative connection present
+Dussault: Dillon rushed for 1,635 yards...
+```
+
+## what you learn
+
+- `AgentSkills(skills=["./skills"])` loads SKILL.md recipe files as agent knowledge
+- `SteeringHandler` enforces deterministic pre-tool-call rules
+- `LLMSteeringHandler` uses a secondary LLM to evaluate output quality
+- `LedgerProvider` tracks tool call history for workflow validation
+- `Proceed` / `Guide` return types control whether the agent continues or corrects
+
+## troubleshooting
+
+| error                                                   | fix                                                      |
+| ------------------------------------------------------- | -------------------------------------------------------- |
+| `ModuleNotFoundError: No module named 'strands'`        | `pip install -r ../../requirements.txt`                  |
+| `ModuleNotFoundError: No module named 'dussault_tools'` | `cd` to this directory first, or ensure module 01 exists |
+| `ConnectionRefusedError` (ollama)                       | run `ollama serve` in another terminal                   |
+| `NoCredentialsError` (bedrock)                          | set `export MODEL_PROVIDER=ollama` to skip AWS           |
