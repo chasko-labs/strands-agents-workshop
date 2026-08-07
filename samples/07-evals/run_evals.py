@@ -1,13 +1,11 @@
 """Module 7: Evals — automated output quality + trajectory evaluation.
 
-Runs two evaluations:
-1. Output eval (LLM-as-judge): Is the response accurate and well-formed?
-2. Trajectory eval: Did the agent follow the lookup-before-claim workflow?
+Two evaluations:
+1. Output eval (LLM-as-judge): accurate and well-formed?
+2. Trajectory eval: did the agent follow lookup-before-claim?
 
-Both use weak-vs-strong agent comparison to prove the rubric discriminates.
-Like NGS 90% directional approval from domain experts.
+Weak-vs-strong agent comparison proves the rubric discriminates.
 
-From the repo root:
     cd samples/07-evals
     pip install -r requirements.txt
     python run_evals.py
@@ -21,17 +19,17 @@ import nest_asyncio
 nest_asyncio.apply()
 
 from strands import Agent
-from strands.models import BedrockModel
+from model_provider import get_model
 from strands_evals import Case, Experiment
 from strands_evals.evaluators import OutputEvaluator, TrajectoryEvaluator
 from strands_evals.extractors import tools_use_extractor
-from dynasty_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
+from dussault_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
 
 
 # --- Dussault Output Rubric ---
 
 DUSSAULT_RUBRIC = """
-Evaluate the dynasty analyst response against the Dussault standard:
+Evaluate the Dussault response against the quality standard:
 
 1. Accuracy — Does it contain correct data from the 2004 season? Fabricated
    stats, wrong scores, or invented details must score 0.
@@ -53,7 +51,7 @@ Score 0.0 if: fabricated data, vague claims, or wrong information.
 WEAK_PROMPT = """You are a football analyst. Answer questions about the Patriots.
 Do your best even without access to specific data."""
 
-STRONG_PROMPT = """You are a 2004 New England Patriots dynasty analyst.
+STRONG_PROMPT = """You are Dussault, a 2004 New England Patriots dynasty analyst.
 Always look up the data before making claims. Never guess stats.
 Be specific: cite game weeks, scores, stat lines.
 Connect facts to narrative. Name what's unknown."""
@@ -122,7 +120,7 @@ def run_output_evals():
 
     def weak_task(case: Case) -> str:
         agent = Agent(
-            model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+            model=get_model(),
             system_prompt=WEAK_PROMPT,
             callback_handler=None,
         )
@@ -139,7 +137,7 @@ def run_output_evals():
 
     def strong_task(case: Case) -> str:
         agent = Agent(
-            model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+            model=get_model(),
             tools=[lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff],
             system_prompt=STRONG_PROMPT,
             callback_handler=None,
@@ -183,7 +181,7 @@ def run_trajectory_evals():
 
     def trajectory_task(case: Case) -> dict:
         agent = Agent(
-            model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+            model=get_model(),
             tools=[lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff],
             system_prompt=STRONG_PROMPT,
             callback_handler=None,

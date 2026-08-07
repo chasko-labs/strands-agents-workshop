@@ -6,9 +6,10 @@
 ```
 
 a strands-agents workshop themed around the 2004 world champion new england patriots.
-seven modules build a "dynasty analyst" agent piece by piece — the same architectural
-patterns AWS Next Gen Stats uses (feature extraction → inference → human-guided output)
-applied to the greatest team ever assembled.
+seven modules build "Dussault" — an agent named after the patriots.com writer whose
+work sets the quality bar — piece by piece. the same architectural patterns AWS Next
+Gen Stats uses (feature extraction → inference → human-guided output) applied to the
+greatest team ever assembled.
 
 the gold standard for agent output quality is Mike Dussault's work at patriots.com —
 evidence-first, narrative-aware, specific about what's known and honest about what isn't.
@@ -40,10 +41,10 @@ the eval rubric in module 07 scores agent responses against these patterns.
 
 ```
 samples/
-  01-agent-loop-tools/    -- dynasty analyst with roster/game/stat lookup tools
+  01-agent-loop-tools/    -- Dussault with roster/game/stat lookup tools
   02-hooks/               -- analytics tracking hook, repeat-query detector
   03-skills-steering/     -- dynasty debate skill + fact-check guardrail
-  04-session-managers/    -- persistent dynasty research sessions
+  04-session-managers/    -- persistent research sessions
   05-deploy/              -- agentcore serverless deployment
   06-multi-agent/         -- orchestrator + podcast research specialist
   07-evals/              -- output quality + trajectory evaluation
@@ -56,7 +57,7 @@ samples/
 | 02     | hooks              | track query patterns, detect repeat lookups, enforce cite-your-source                          |
 | 03     | skills + steering  | dynasty-debate workflow skill + fact-check handler (blocks claims without prior lookup)        |
 | 04     | session managers   | persistent research sessions — agent remembers your prior analysis across restarts             |
-| 05     | deploy             | package the dynasty analyst as a serverless agentcore endpoint                                 |
+| 05     | deploy             | package Dussault as a serverless agentcore endpoint                                            |
 | 06     | multi-agent        | orchestrator delegates podcast questions to a specialist with episode search tools             |
 | 07     | evals              | output eval (is the response accurate?) + trajectory eval (did it follow lookup-before-claim?) |
 

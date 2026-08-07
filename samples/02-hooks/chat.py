@@ -1,32 +1,27 @@
-"""Module 2: Hooks — dynasty analyst with analytics tracking.
+"""Module 2: Hooks — Dussault with analytics tracking.
 
-Demonstrates HookProvider lifecycle hooks:
-- BeforeInvocationEvent: reset tracking at start of each turn
-- BeforeToolCallEvent: track queries, detect repeats, enforce cite-your-source
+HookProvider lifecycle hooks: reset tracking per turn, detect repeat
+lookups, enforce cite-your-source. Same pattern as NGS CloudWatch
+monitoring every inference.
 
-From the repo root:
     cd samples/02-hooks
     python chat.py
 """
 
 import sys
 sys.path.insert(0, "../shared")
+from model_provider import get_model
 
 from strands import Agent
-from strands.models import BedrockModel
 from strands.hooks import HookProvider, HookRegistry, BeforeInvocationEvent, BeforeToolCallEvent
 
 # Import tools from module 01
 sys.path.insert(0, "../01-agent-loop-tools")
-from dynasty_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
+from dussault_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
 
 
-class DynastyAnalyticsHook(HookProvider):
-    """Tracks analysis patterns and blocks repeat lookups.
-    
-    Like NGS CloudWatch monitoring every inference — this hook observes
-    every tool call, tracks what's been queried, and prevents redundant lookups.
-    """
+class DussaultAnalyticsHook(HookProvider):
+    """Tracks analysis patterns and blocks repeat lookups."""
 
     def __init__(self):
         self.queried_players: set = set()
@@ -79,27 +74,24 @@ class DynastyAnalyticsHook(HookProvider):
             print(f"[ANALYTICS] \u26a0\ufe0f  High analysis depth: {self.tool_count} tools this turn")
 
 
-SYSTEM_PROMPT = """You are a 2004 New England Patriots dynasty analyst. Your approach mirrors
-the best of patriots.com's coverage — evidence-first, narrative-aware.
+SYSTEM_PROMPT = """You are Dussault, a 2004 New England Patriots dynasty analyst. Your approach is deeply researched, evidence-first, narrative-aware.
 
-When answering:
-- Always look up the data before making claims. Never guess stats.
-- Connect facts to story — why something happened matters as much as what happened.
-- Be specific: cite game weeks, scores, stat lines.
-- Describe players in terms of their role on the team."""
+- Look up the data before making claims. Never guess stats
+- Connect facts to story — why something happened matters as much as what
+- Be specific: cite game weeks, scores, stat lines
+- Describe players in terms of their role on the team"""
 
 
 def main():
     agent = Agent(
-        model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+        model=get_model(),
         tools=[lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff],
-        hooks=[DynastyAnalyticsHook()],
+        hooks=[DussaultAnalyticsHook()],
         system_prompt=SYSTEM_PROMPT,
     )
 
-    print("2004 Patriots Dynasty Analyst (with analytics hooks) — type 'quit' to exit.")
-    print("Try asking about the same player twice to see the repeat-query blocker.")
-    print('Or:  "Compare Brady and Dillon\'s seasons" to see analysis depth tracking.\n')
+    print("Dussault (with analytics hooks) — type 'quit' to exit.")
+    print("Try asking about the same player twice to see the repeat-query blocker.\n")
 
     while True:
         try:

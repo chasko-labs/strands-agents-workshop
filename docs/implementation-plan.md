@@ -4,7 +4,7 @@
 
 ## overview
 
-seven modules build a "dynasty analyst" agent using strands-agents SDK. each module
+seven modules build Dussault using strands-agents SDK. each module
 layers one capability on the same 2004 patriots use case. the agent's output quality
 targets mike dussault's approach at patriots.com: evidence-first, narrative-aware,
 specific about what's known, honest about what isn't.
@@ -117,7 +117,7 @@ SEASON_RECORDS = {
 - `get_season_stats(player_name: str)` → full stat line
 - `get_coaching_staff()` → all coaches + roles
 
-**system prompt:** dynasty analyst persona (dussault standard)
+**system prompt:** Dussault persona
 
 **NGS parallel:** tools as feature extractors — each returns one structured data dimension
 

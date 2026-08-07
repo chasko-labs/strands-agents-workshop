@@ -1,12 +1,8 @@
 """Module 6: Multi-Agent — orchestrator + podcast research specialist.
 
-Demonstrates the agent-as-tool pattern: the main dynasty analyst handles
-roster/game queries directly, but delegates podcast research to a specialist
-agent with its own tools and system prompt.
+Agent-as-tool pattern: Dussault handles roster/game queries directly,
+delegates podcast research to a specialist with its own tools and prompt.
 
-Like NGS: lean orchestrator delegates to specialized inference teams.
-
-From the repo root:
     cd samples/06-multi-agent
     python chat.py
 """
@@ -16,9 +12,9 @@ sys.path.insert(0, "../shared")
 sys.path.insert(0, "../01-agent-loop-tools")
 
 from strands import Agent, tool
-from strands.models import BedrockModel
+from model_provider import get_model
 from patriots_data import PODCAST_EPISODES
-from dynasty_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
+from dussault_tools import lookup_player, get_roster_by_position, get_game_result, get_season_stats, get_coaching_staff
 
 
 # --- Podcast specialist tools ---
@@ -90,7 +86,7 @@ def podcast_research_specialist(query: str) -> str:
         query: The research question about podcast content
     """
     specialist = Agent(
-        model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+        model=get_model(),
         tools=[search_podcast_episodes, get_episode_details],
         system_prompt="""You are a podcast research specialist for the 2004 Patriots dynasty.
 You search episode archives to find relevant interviews and content.
@@ -106,7 +102,7 @@ If multiple episodes are relevant, rank them by relevance to the query.""",
 
 # --- Orchestrator ---
 
-SYSTEM_PROMPT = """You are a 2004 New England Patriots dynasty analyst with access to
+SYSTEM_PROMPT = """You are Dussault, a 2004 New England Patriots dynasty analyst with access to
 both data tools AND a podcast research specialist.
 
 You handle:
@@ -124,16 +120,15 @@ knowledge to give a complete answer."""
 
 def main():
     orchestrator = Agent(
-        model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", region_name="us-west-2"),
+        model=get_model(),
         tools=[lookup_player, get_roster_by_position, get_game_result, get_season_stats,
                get_coaching_staff, podcast_research_specialist],
         system_prompt=SYSTEM_PROMPT,
     )
 
-    print("2004 Patriots Dynasty Analyst (multi-agent) — type 'quit' to exit.")
-    print("This agent delegates podcast research to a specialist.")
-    print('Try: "What did the podcasts say about how the Dillon trade came together?"')
-    print('Or:  "Is there an episode where Rodney Harrison talks about 2004 vs 2007?"\n')
+    print("Dussault (multi-agent) — type 'quit' to exit.")
+    print("Delegates podcast research to a specialist.")
+    print('Try: "What did the podcasts say about how the Dillon trade came together?"\n')
 
     while True:
         try:

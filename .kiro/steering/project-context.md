@@ -3,7 +3,7 @@
 ## what this repo is
 
 a hands-on workshop teaching strands-agents SDK patterns through the 2004 new england
-patriots dynasty season. seven modules build a "dynasty analyst" agent piece by piece —
+patriots dynasty season. seven modules build "Dussault" — named after the patriots.com writer whose work sets the quality bar — piece by piece.
 tools, hooks, skills, sessions, deploy, multi-agent, evals. the gold standard for
 agent output quality is Mike Dussault's work at patriots.com.
 

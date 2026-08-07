@@ -1,5 +1,5 @@
-"""Dynasty analyst tools for the 2004 New England Patriots.
-Each tool extracts one structured data dimension — like NGS feature extraction.
+"""Dussault's tools — 2004 New England Patriots data extraction.
+Each tool returns one structured dimension. Same pattern as NGS feature extraction.
 """
 
 import sys
